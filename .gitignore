@@ -1,0 +1,74 @@
+# Build files
+
+build/
+cmake-build-*/
+out/
+
+
+# Compiled binaries
+
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+
+
+# Object files
+
+*.o
+*.obj
+*.a
+*.lib
+
+
+# CMake
+
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+
+
+# IDE files
+
+.vscode/
+.idea/
+*.sln
+*.vcxproj
+*.user
+
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+
+# Logs
+
+*.log
+
+
+# Temporary files
+
+*.tmp
+*.temp
+
+
+# Testing output
+
+test-results/
+
+
+# LLVM generated files
+
+*.bc
+*.ll
+
+
+# Local configuration
+
+.env
+local.config
