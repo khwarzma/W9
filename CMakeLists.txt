@@ -29,7 +29,7 @@ else()
 endif()
 
 
-# Source files
+# Collect source files
 
 file(GLOB_RECURSE W9_SOURCES
 
@@ -38,6 +38,8 @@ file(GLOB_RECURSE W9_SOURCES
 
 )
 
+
+# Main executable
 
 add_executable(
     W9
@@ -55,9 +57,13 @@ target_include_directories(
 )
 
 
-# Tests
+# Testing support
 
 enable_testing()
 
 
-add_subdirectory(tests OPTIONAL)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+
+    add_subdirectory(tests)
+
+endif()
