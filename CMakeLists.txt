@@ -6,64 +6,65 @@ project(W9
     LANGUAGES CXX
 )
 
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-
-# Compiler warnings
+# Warnings
 
 if(MSVC)
-
     add_compile_options(/W4)
-
 else()
-
     add_compile_options(
         -Wall
         -Wextra
         -Wpedantic
     )
-
 endif()
 
+# Engine sources only (بدون main.cpp)
 
-# Collect source files
-
-file(GLOB_RECURSE W9_SOURCES
-
+file(GLOB_RECURSE W9_CORE_SOURCES
     engine/*.cpp
-    src/*.cpp
-
 )
 
+# Core library
+
+add_library(w9_core STATIC
+    ${W9_CORE_SOURCES}
+)
+
+target_include_directories(w9_core
+    PUBLIC
+        include
+        engine
+)
 
 # Main executable
 
-add_executable(
-    W9
-    ${W9_SOURCES}
+add_executable(W9
+    src/main.cpp
 )
 
-
-target_include_directories(
-    W9
+target_link_libraries(W9
     PRIVATE
-
-    include
-    engine
-
+        w9_core
 )
 
-
-# Testing support
+# Tests
 
 enable_testing()
 
+add_executable(w9_tests
+    tests/test_main.cpp
+)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+target_link_libraries(w9_tests
+    PRIVATE
+        w9_core
+)
 
-    add_subdirectory(tests)
-
-endif()
+add_test(
+    NAME CoreEngineTests
+    COMMAND w9_tests
+)
