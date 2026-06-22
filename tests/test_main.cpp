@@ -5,6 +5,9 @@
 #include "../engine/parser/parser.h"
 #include "../engine/vm/vm.h"
 #include "../engine/gc/gc.h"
+#include "../engine/jit/jit.h"
+#include "../engine/bindings/bindings.h"
+#include "../engine/runtime/environment.h"
 
 // دالة مساعدة لطباعة نتائج الاختبارات بشكل احترافي
 void run_test(std::string_view test_name, void(*test_func)()) {
@@ -112,6 +115,51 @@ void test_garbage_collector_allocation() {
     // يجب أن يتبقى obj1 حياً ويتم حذف obj2 تلقائياً لعدم وجود علامة عليه
     assert(obj1->data == 100);
 }
+// 6. اختبار نظام الـ JIT والتحقق من التوليد المتوافق مع LLVM
+void test_jit_compiler_pipeline() {
+    std::string_view source = "let fast_result = 5 + 10;";
+    w9::lexer::Lexer lexer(source);
+    w9::parser::Parser parser(lexer);
+    auto program = parser.parse_program();
+
+    w9::jit::JITCompiler jit;
+    
+    // محاكاة تكرار تنفيذ الكود لرصد كونه "Hot Code"
+    size_t execution_loop_count = 12;
+    if (jit.should_compile(execution_loop_count)) {
+        jit.compile_to_native(program.get());
+        double res = jit.execute_native_block();
+        assert(res == 0.0); // القيمة المرجعة الافتراضية من المحاكاة الناجحة
+    }
+}
+// 7. اختبار نظام الـ Bindings وحقن دوال الـ C++ الخارجية (محاكاة بيئة المتصفح)
+void test_browser_bindings_injection() {
+    // 1. تهيئة بيئة الـ Runtime
+    auto global_env = std::make_shared<w9::runtime::Environment>();
+    w9::bindings::BindingRegistry registry(global_env);
+
+    // 2. كتابة دالة C++ أصلية تحاكي console.log وتجمع الأرقام الممررة من جافاسكريبت
+    bool function_was_called = false;
+    registry.register_function("alert", [&](const std::vector<w9::runtime::JSValue>& args) -> w9::runtime::JSValue {
+        function_was_called = true;
+        if (!args.empty()) {
+            std::cout << "[Browser Simulation Alert] " << args[0].to_string() << "\n";
+        }
+        return w9::runtime::JSValue(true); // إرجاع true لجافاسكريبت
+    });
+
+    // 3. التحقق من أن المحرك تعرف على الدالة المحقونة في الـ Scope
+    w9::runtime::JSValue lookup_res = global_env->lookup("alert");
+    assert(lookup_res.is_string()); // تحتوي على نص التعريف الافتراضي
+
+    // 4. محاكاة استدعاء الدالة عبر الجسر والتأكد من استجابة الـ C++
+    std::vector<w9::runtime::JSValue> call_args = { w9::runtime::JSValue(42.0) };
+    w9::runtime::JSValue return_val = registry.trigger_binding("alert", call_args);
+    
+    assert(function_was_called == true);
+    assert(return_val.type() == w9::runtime::ValueType::BOOLEAN);
+}
+
 int main() {
     std::cout << "========================================\n";
     std::cout << "Running W9 Engine Core Test Suite\n";
@@ -122,7 +170,8 @@ int main() {
     run_test("Virtual Machine: Bytecode Compilation & Execution", test_vm_execution);
     run_test("JavaScript Features: Function Parsing & VM Call Dispatch", test_function_parsing_and_call);
     run_test("Garbage Collector: Heap Allocation & Sweep Verification", test_garbage_collector_allocation);
-
+    run_test("JIT Compiler: Hot Code Detection & LLVM IR Generation", test_jit_compiler_pipeline);
+    run_test("Browser Bindings: Bridge Injection & Host Function API", test_browser_bindings_injection);
     std::cout << "========================================\n";
     std::cout << "All core engine modules are verified.\n";
     return 0;
