@@ -4,6 +4,7 @@
 #include "../engine/lexer/lexer.h"
 #include "../engine/parser/parser.h"
 #include "../engine/vm/vm.h"
+#include "../engine/gc/gc.h"
 
 // دالة مساعدة لطباعة نتائج الاختبارات بشكل احترافي
 void run_test(std::string_view test_name, void(*test_func)()) {
@@ -85,6 +86,32 @@ void test_function_parsing_and_call() {
     vm.interpret(chunk);
 }
 
+// 5. اختبار حجز الكائنات والـ Garbage Collector
+struct TestObject : public w9::gc::GCObject {
+    int data;
+    TestObject(int val) : data(val) {}
+};
+
+void test_garbage_collector_allocation() {
+    w9::gc::GarbageCollector gc;
+    
+    // حجز كائنين داخل الـ Heap وتتبع الذاكرة
+    TestObject* obj1 = gc.allocate<TestObject>(100);
+    TestObject* obj2 = gc.allocate<TestObject>(200);
+
+    assert(obj1 != nullptr && obj2 != nullptr);
+    assert(obj1->data == 100);
+    assert(gc.bytes_allocated() > 0);
+
+    // محاكاة وضع علامة (Mark) على obj1 فقط ليبقى حياً
+    obj1->is_marked = true;
+
+    // تشغيل دورة الكنس والتنظيف
+    gc.collect_garbage();
+
+    // يجب أن يتبقى obj1 حياً ويتم حذف obj2 تلقائياً لعدم وجود علامة عليه
+    assert(obj1->data == 100);
+}
 int main() {
     std::cout << "========================================\n";
     std::cout << "Running W9 Engine Core Test Suite\n";
@@ -94,6 +121,7 @@ int main() {
     run_test("Parser: AST Structure & Operator Precedence", test_parser_ast_generation);
     run_test("Virtual Machine: Bytecode Compilation & Execution", test_vm_execution);
     run_test("JavaScript Features: Function Parsing & VM Call Dispatch", test_function_parsing_and_call);
+    run_test("Garbage Collector: Heap Allocation & Sweep Verification", test_garbage_collector_allocation);
 
     std::cout << "========================================\n";
     std::cout << "All core engine modules are verified.\n";
