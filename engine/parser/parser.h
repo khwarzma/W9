@@ -12,6 +12,7 @@ enum class Precedence {
     LOWEST,
     SUM,     // + or -
     PRODUCT, // * or /
+    CALL,    // myFunction()
 };
 
 class Parser {
@@ -36,6 +37,12 @@ private:
     // دالات تحليل العبارات (Statements)
     std::unique_ptr<ast::Statement> parse_statement();
     std::unique_ptr<ast::VariableDeclaration> parse_variable_declaration();
+    
+    std::unique_ptr<ast::FunctionDeclaration> parse_function_declaration();
+    std::vector<std::string_view> parse_function_parameters();
+    std::vector<std::unique_ptr<ast::Statement>> parse_block_statement();
+    std::unique_ptr<ast::Expression> parse_call_expression(std::unique_ptr<ast::Expression> callee);
+    std::vector<std::unique_ptr<ast::Expression>> parse_call_arguments();
     
     // دالات تحليل التعبيرات (Expressions) باستخدام Pratt Parsing
     std::unique_ptr<ast::Expression> parse_expression(Precedence precedence);

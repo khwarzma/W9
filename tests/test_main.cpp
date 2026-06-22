@@ -66,6 +66,23 @@ void test_vm_execution() {
     // تشغيل الـ VM للتأكد من عدم وجود crashes أثناء تنفيذ الـ Dispatch loops
     w9::vm::VM vm;
     vm.interpret(chunk); // سيطبع [VM Debug] Defined Variable: result = 10.000000
+
+}
+// 4. اختبار تحليل واستدعاء الدوال
+void test_function_parsing_and_call() {
+    std::string_view source = "function add(a, b) { let r = a + b; } add(5, 10);";
+    w9::lexer::Lexer lexer(source);
+    w9::parser::Parser parser(lexer);
+    auto program = parser.parse_program();
+    
+    assert(program != nullptr);
+    
+    w9::vm::BytecodeCompiler compiler;
+    w9::vm::Chunk chunk = compiler.compile(program.get());
+    
+    w9::vm::VM vm;
+    // التأكد من أن الـ VM يمر عبر تعليمات الاستدعاء دون مشاكل
+    vm.interpret(chunk);
 }
 
 int main() {
@@ -76,6 +93,7 @@ int main() {
     run_test("Lexer: Tokenization and Lexeme Verification", test_lexer_tokenization);
     run_test("Parser: AST Structure & Operator Precedence", test_parser_ast_generation);
     run_test("Virtual Machine: Bytecode Compilation & Execution", test_vm_execution);
+    run_test("JavaScript Features: Function Parsing & VM Call Dispatch", test_function_parsing_and_call);
 
     std::cout << "========================================\n";
     std::cout << "All core engine modules are verified.\n";

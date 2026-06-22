@@ -95,5 +95,41 @@ namespace w9::ast
             return std::string(value);
         }
     };
+    // عبارة تعريف الدالة: function name(params) { body }
+    class FunctionDeclaration : public Statement {
+    public:
+        std::string_view name;
+        std::vector<std::string_view> parameters;
+        std::vector<std::unique_ptr<Statement>> body;
+
+        std::string to_string() const override {
+            std::string result = "function " + std::string(name) + "(";
+            for (size_t i = 0; i < parameters.size(); ++i) {
+                result += std::string(parameters[i]) + (i < parameters.size() - 1 ? ", " : "");
+            }
+            result += ") {\n";
+            for (const auto& stmt : body) {
+                result += "  " + stmt->to_string() + "\n";
+            }
+            result += "}";
+            return result;
+        }
+    };
+
+    // تعبير استدعاء الدالة: name(arguments)
+    class CallExpression : public Expression {
+    public:
+        std::unique_ptr<Expression> callee; // غالباً IdentifierLiteral باسم الدالة
+        std::vector<std::unique_ptr<Expression>> arguments;
+
+        std::string to_string() const override {
+            std::string result = callee->to_string() + "(";
+            for (size_t i = 0; i < arguments.size(); ++i) {
+                result += arguments[i]->to_string() + (i < arguments.size() - 1 ? ", " : "");
+            }
+            result += ")";
+            return result;
+        }
+    };
 
 } // namespace w9::ast

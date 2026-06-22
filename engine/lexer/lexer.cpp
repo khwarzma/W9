@@ -94,8 +94,19 @@ Token Lexer::read_string() {
 Token Lexer::next_token() {
     skip_whitespace();
 
+    if (ch_ == 0) {
+        return Token{
+            TokenType::END_OF_FILE,
+            "",
+            line_,
+            column_
+        };
+    }
+
     Token tok;
-    std::string_view current_char_view = source_.substr(position_, 1);
+
+    std::string_view current_char_view =
+        source_.substr(position_, 1);
 
     switch (ch_) {
         case '=':
@@ -120,17 +131,19 @@ Token Lexer::next_token() {
             tok = make_token(TokenType::LBRACE, current_char_view); break;
         case '}':
             tok = make_token(TokenType::RBRACE, current_char_view); break;
+
         case '"':
         case '\'':
             return read_string();
-        case 0:
-            tok = Token{TokenType::END_OF_FILE, "", line_, column_}; break;
+
         default:
             if (std::isalpha(ch_) || ch_ == '_') {
                 return read_identifier();
-            } else if (std::isdigit(ch_)) {
+            }
+            else if (std::isdigit(ch_)) {
                 return read_number();
-            } else {
+            }
+            else {
                 tok = make_token(TokenType::UNKNOWN, current_char_view);
             }
             break;

@@ -18,6 +18,7 @@ enum Opcode : uint8_t {
     OP_DEFINE_GLOBAL, // تعريف متغير عام
     OP_GET_GLOBAL,    // جلب متغير عام
     OP_SET_GLOBAL,    // تعديل متغير عام
+    OP_CALL,          // استدعاء دالة وإنشاء إطار استدعاء جديد
     OP_RETURN     // إنهاء التنفيذ
 };
 

@@ -46,6 +46,18 @@ void BytecodeCompiler::compile_expression(ast::Expression* expr) {
         else if (binary->op == "*") chunk_.write(OP_MUL);
         else if (binary->op == "/") chunk_.write(OP_DIV);
     }
+    else if (auto call = dynamic_cast<ast::CallExpression*>(expr)) {
+        // 1. توليد تعليمات المعاملات (Arguments) ودفعها للمكدس أولاً
+        for (const auto& arg : call->arguments) {
+            compile_expression(arg.get());
+        }
+        // 2. توليد تعبير الدالة المستدعاة (Callee)
+        compile_expression(call->callee.get());
+        
+        // 3. كتابة أمر الاستدعاء مع عدد المعاملات كـ Operand
+        chunk_.write(OP_CALL);
+        chunk_.write(static_cast<uint8_t>(call->arguments.size()));
+    }
 }
 
 // === 2. الآلة الافتراضية (Execution Engine) ===
@@ -92,6 +104,26 @@ void VM::interpret(const Chunk& chunk) {
                 std::cout << "[VM Debug] Defined Variable: " << var_name << " = " << var_value.to_string() << "\n";
                 break;
             }
+            case OP_CALL: {
+                uint8_t arg_count = chunk.code[ip++];
+                auto callee = pop(); // جلب اسم الدالة أو كائن الدالة من المكدس
+                
+                // في هذه المرحلة التجريبية من المرحلة 5، نقوم بمحاكاة استقبال المعاملات وتنفيذها
+                std::vector<runtime::JSValue> args;
+                for (int i = 0; i < arg_count; ++i) {
+                    args.insert(args.begin(), pop());
+                }
+                
+                std::cout << "[VM Debug] Calling Function: " << callee.to_string() << " with " << std::to_string(arg_count) << " arguments.\n";
+                for (size_t i = 0; i < args.size(); ++i) {
+                    std::cout << "  Arg [" << i << "]: " << args[i].to_string() << "\n";
+                }
+                
+                // دفع قيمة إرجاع وهمية (undefined) للمكدس مؤقتاً حتى نربط الـ Return Statement
+                push(runtime::JSValue());
+                break;
+            }
+        
             case OP_RETURN:
                 return;
             default:
