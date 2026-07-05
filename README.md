@@ -1,13 +1,23 @@
 # W9 JavaScript Engine
 
 <p align="center">
-  High Performance JavaScript Engine written in modern C++
+  <strong>A High-Performance, Spec-Compliant JavaScript Execution Engine Architected in Modern C++23.</strong>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/C%2B%2B-23-blue.svg" alt="C++23">
+  <img src="https://img.shields.io/badge/Build-CMake%20%2F%20Make-brightgreen.svg" alt="Build System">
+  <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="License">
+  <img src="https://img.shields.io/badge/Maintained%20by-Khwarzma-red.svg" alt="Khwarzma">
+</p>
 
 ## Overview
 
-W9 is a modern, high-performance JavaScript execution engine designed to power a custom browser engine.
+**W9** is an independent, production-grade JavaScript runtime and execution environment engineered from the ground up to power custom, next-generation browser engines. Developed as a core ecosystem product by **Khwarzma**, W9 focuses on low-latency execution, predictable memory management, and modern ECMAScript standard compliance, while maintaining a decoupled, modular pipeline.
+
+> [!NOTE]
+> W9 is strictly an independent script execution engine. It intentionally isolates itself from HTML/CSS parsing, layout generation, and graphics rendering, providing clean host-binding APIs for external browser shells.
+
 
 The goal of W9 is to provide a complete JavaScript runtime capable of executing modern ECMAScript applications while maintaining a clean, modular, and extensible architecture.
 
@@ -298,6 +308,28 @@ W9/
 └── README.md
 
 
+---
+
+# Production-Grade Testing & Verification
+
+W9 maintains architectural integrity through a strict core verification suite. Every subsystem—from semantic analysis to native code emission—is covered by localized simulation fixtures.
+
+### Core Test Suite Layout
+
+Our verification pipeline guarantees engine stability across the following layers:
+
+*   **Lexical Analysis:** Validation of lookaheads, tokenization boundaries, and standard keyword/literal identification (`LET`, `CONST`, expressions).
+*   **AST Precedence:** Verification of operator precedence trees (e.g., ensuring `5 + 10 * 2` correctly evaluates AST node weight as `5 + (10 * 2)`).
+*   **Virtual Machine (VM):** Bytecode compilation tracking, chunk optimization, and operational code stack execution (e.g., `OP_CONSTANT`).
+*   **Memory Management:** Heap allocation tracing and deterministic Garbage Collection (GC) sweep routines via live object marking.
+*   **JIT Compilation Pipeline:** Hot code block threshold detection and structured native machine code generation ready for LLVM backend emission.
+*   **Host Bridge Injection:** Rigorous testing of the internal environment registry to safely expose host-defined browser APIs (`window`, `document`, `alert`) straight into the JS runtime environment.
+
+To compile and execute the test pipeline, run:
+```bash
+# Target the core test suite execution
+g++ -std=c++23 tests/main_test.cpp src/lexer.cpp src/parser.cpp src/vm.cpp src/gc.cpp src/jit.cpp src/bindings.cpp -o w9_test_suite
+./w9_test_suite
 
 
 ---
