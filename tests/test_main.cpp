@@ -9,14 +9,14 @@
 #include "../engine/bindings/bindings.h"
 #include "../engine/runtime/environment.h"
 
-// دالة مساعدة لطباعة نتائج الاختبارات بشكل احترافي
+
 void run_test(std::string_view test_name, void(*test_func)()) {
     std::cout << "[RUNNING] " << test_name << "... ";
     try {
         test_func();
-        std::cout << "\033[32m[PASSED]\033[0m\n"; // طباعة باللون الأخضر عند النجاح
+        std::cout << "\033[32m[PASSED]\033[0m\n";
     } catch (const std::exception& e) {
-        std::cout << "\033[31m[FAILED]\033[0m\n"; // طباعة باللون الأحمر عند الفشل
+        std::cout << "\033[31m[FAILED]\033[0m\n";
         std::cerr << "  Error: " << e.what() << "\n";
     }
 }
@@ -27,7 +27,6 @@ void test_lexer_tokenization() {
     w9::lexer::Lexer lexer(source);
     auto tokens = lexer.tokenize();
 
-    // التحقق من تصنيفات الرموز الأساسية المستخرجة
     assert(tokens[0].type == w9::lexer::TokenType::LET);
     assert(tokens[1].lexeme == "x");
     assert(tokens[3].type == w9::lexer::TokenType::NUMBER);
@@ -37,7 +36,6 @@ void test_lexer_tokenization() {
     assert(tokens.back().type == w9::lexer::TokenType::END_OF_FILE);
 }
 
-// 2. اختبار الـ Parser وبناء الـ AST
 void test_parser_ast_generation() {
     std::string_view source = "let x = 5 + 10 * 2;";
     w9::lexer::Lexer lexer(source);
@@ -47,13 +45,11 @@ void test_parser_ast_generation() {
     assert(program != nullptr);
     assert(program->statements.size() == 1);
 
-    // التحقق من أن النص الشجري للـ AST يحترم أسبقية العمليات الرياضية (Pratt Parsing)
-    // الضرب (* 10 2) يجب أن يكون معاً أولاً، ثم يضاف للـ 5
+
     std::string ast_dump = program->to_string();
     assert(ast_dump.find("let x = (5 + (10 * 2));") != std::string::npos);
 }
 
-// 3. اختبار الـ VM وتوليد الـ Bytecode وتكامله
 void test_vm_execution() {
     std::string_view source = "let result = 15 - 5;";
     w9::lexer::Lexer lexer(source);
@@ -63,16 +59,15 @@ void test_vm_execution() {
     w9::vm::BytecodeCompiler compiler;
     w9::vm::Chunk chunk = compiler.compile(program.get());
 
-    // التحقق من توليد التعليمات بشكل سليم
+    
     assert(!chunk.code.empty());
-    assert(chunk.code[0] == w9::vm::OP_CONSTANT); // تحميل 15
+    assert(chunk.code[0] == w9::vm::OP_CONSTANT); 
 
-    // تشغيل الـ VM للتأكد من عدم وجود crashes أثناء تنفيذ الـ Dispatch loops
     w9::vm::VM vm;
-    vm.interpret(chunk); // سيطبع [VM Debug] Defined Variable: result = 10.000000
+    vm.interpret(chunk); 
 
 }
-// 4. اختبار تحليل واستدعاء الدوال
+
 void test_function_parsing_and_call() {
     std::string_view source = "function add(a, b) { let r = a + b; } add(5, 10);";
     w9::lexer::Lexer lexer(source);
@@ -85,11 +80,11 @@ void test_function_parsing_and_call() {
     w9::vm::Chunk chunk = compiler.compile(program.get());
     
     w9::vm::VM vm;
-    // التأكد من أن الـ VM يمر عبر تعليمات الاستدعاء دون مشاكل
+   
     vm.interpret(chunk);
 }
 
-// 5. اختبار حجز الكائنات والـ Garbage Collector
+
 struct TestObject : public w9::gc::GCObject {
     int data;
     TestObject(int val) : data(val) {}
@@ -106,16 +101,16 @@ void test_garbage_collector_allocation() {
     assert(obj1->data == 100);
     assert(gc.bytes_allocated() > 0);
 
-    // محاكاة وضع علامة (Mark) على obj1 فقط ليبقى حياً
+
     obj1->is_marked = true;
 
-    // تشغيل دورة الكنس والتنظيف
+    
     gc.collect_garbage();
 
-    // يجب أن يتبقى obj1 حياً ويتم حذف obj2 تلقائياً لعدم وجود علامة عليه
+    
     assert(obj1->data == 100);
 }
-// 6. اختبار نظام الـ JIT والتحقق من التوليد المتوافق مع LLVM
+
 void test_jit_compiler_pipeline() {
     std::string_view source = "let fast_result = 5 + 10;";
     w9::lexer::Lexer lexer(source);
@@ -124,35 +119,34 @@ void test_jit_compiler_pipeline() {
 
     w9::jit::JITCompiler jit;
     
-    // محاكاة تكرار تنفيذ الكود لرصد كونه "Hot Code"
+   
     size_t execution_loop_count = 12;
     if (jit.should_compile(execution_loop_count)) {
         jit.compile_to_native(program.get());
         double res = jit.execute_native_block();
-        assert(res == 0.0); // القيمة المرجعة الافتراضية من المحاكاة الناجحة
+        assert(res == 0.0); 
     }
 }
-// 7. اختبار نظام الـ Bindings وحقن دوال الـ C++ الخارجية (محاكاة بيئة المتصفح)
+
 void test_browser_bindings_injection() {
-    // 1. تهيئة بيئة الـ Runtime
+   
     auto global_env = std::make_shared<w9::runtime::Environment>();
     w9::bindings::BindingRegistry registry(global_env);
 
-    // 2. كتابة دالة C++ أصلية تحاكي console.log وتجمع الأرقام الممررة من جافاسكريبت
+    
     bool function_was_called = false;
     registry.register_function("alert", [&](const std::vector<w9::runtime::JSValue>& args) -> w9::runtime::JSValue {
         function_was_called = true;
         if (!args.empty()) {
             std::cout << "[Browser Simulation Alert] " << args[0].to_string() << "\n";
         }
-        return w9::runtime::JSValue(true); // إرجاع true لجافاسكريبت
+        return w9::runtime::JSValue(true); 
     });
 
-    // 3. التحقق من أن المحرك تعرف على الدالة المحقونة في الـ Scope
+    
     w9::runtime::JSValue lookup_res = global_env->lookup("alert");
-    assert(lookup_res.is_string()); // تحتوي على نص التعريف الافتراضي
-
-    // 4. محاكاة استدعاء الدالة عبر الجسر والتأكد من استجابة الـ C++
+    assert(lookup_res.is_string()); 
+   
     std::vector<w9::runtime::JSValue> call_args = { w9::runtime::JSValue(42.0) };
     w9::runtime::JSValue return_val = registry.trigger_binding("alert", call_args);
     
